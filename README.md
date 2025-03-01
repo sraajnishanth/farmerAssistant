@@ -1,0 +1,2 @@
+# farmerAssistant
+Gen Ai project
