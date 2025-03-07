@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Real-Time AI Detection</title>
+  <style>
+    /* Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background-color: #f7f7f7;
+      color: #333;
+      padding: 20px;
+    }
+
+    header {
+      width: 100%;
+      background-color: #4CAF50;
+      padding: 15px;
+      text-align: center;
+      color: #fff;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    header h1 {
+      font-size: 1.5em;
+    }
+
+    /* Container to hold two columns */
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    /* Left Column */
+    .left-column {
+      flex: 1 1 640px;
+      max-width: 640px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Video container styling */
+    .video-container {
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .video-container img {
+      width: 100%;
+      display: block;
+    }
+
+    /* Logs styling (below video) */
+    .logs-container {
+      background-color: #fff;
+      padding: 10px;
+      border-radius: 5px;
+      max-height: 300px;
+      overflow-y: auto;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      font-size: 0.85em;
+      color: #666;
+    }
+
+    /* Right Column */
+    .right-column {
+      flex: 1 1 300px;
+      max-width: 600px;
+      background-color: #fff;
+      border-radius: 5px;
+      padding: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .data-item, .status-item {
+      margin-bottom: 10px;
+      line-height: 1.4em;
+    }
+
+    .status-item {
+      color: #007BFF;
+      font-style: italic;
+    }
+
+    footer {
+      font-size: 0.8em;
+      color: #666;
+      text-align: center;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Real-Time AI Plant Diseae Detection Prototype</h1>
+    <h2>Group 10 GenAi Project</h2>
+  </header>
+
+  <div class="container">
+    <!-- Left Column: Video & Logs -->
+    <div class="left-column">
+      <div class="video-container">
+        <!-- Live stream -->
+        <img src="http://100.122.115.132:8080/video" alt="Live Stream">
+      </div>
+      <div class="location-weather-container">
+        <div id="location" class="data-item">Location: N/A</div>
+        <div id="weather" class="data-item">Weather: N/A</div>
+      </div>
+      
+      <p>Nerd Stats - Logs will be displayed here...</p>
+      <div class="logs-container" id="log">
+        <!-- Log messages will appear here -->
+      </div>
+    </div>
+
+    <!-- Right Column: Data -->
+    <div class="right-column data-container">
+      <div id="status" class="status-item">Status: Waiting for updates...</div>
+      <div id="disease" class="data-item">Most Probable Disease: N/A</div>
+      <div id="recommendation" class="data-item">Recommendation: N/A</div>
+    </div>
+  </div>
+
+  <!-- Option 1: Use a local file from the static folder -->
+  <script src="{{ url_for('static', filename='socket.io.min.js') }}"></script>
+  <!-- Option 2: Use the official CDN -->
+  <!-- <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script> -->
+
+  <script>
+    const socket = io("http://127.0.0.1:8000");
+
+    socket.on("connect", () => {
+      console.log("[INFO] Connected to WebSocket server.");
+      document.getElementById("status").innerText = "Status: Connected to server.";
+    });
+
+    socket.on("disconnect", () => {
+      console.log("[INFO] Disconnected from server.");
+      document.getElementById("status").innerText = "Status: Disconnected from server.";
+    });
+
+    socket.on("log", (data) => {
+      const logDiv = document.getElementById("log");
+
+      // Construct the new line in red
+      let newLine = `<p style="color:red; font-weight:bold">${data.message}</p>`;
+
+      // Replace any old top line (if it had color:red) with color:black
+      let oldContent = logDiv.innerHTML.replace('color:red; font-weight:bold', '');
+
+      // Prepend the new red line at the top
+      logDiv.innerHTML = newLine + oldContent;
+    });
+
+    socket.on("new_data", (data) => {
+      console.log("[INFO] Received new data:", data);
+      document.getElementById("disease").innerText =
+        "Most Probable Disease: " + (data.most_probable || "N/A");
+
+      // Render the recommendation as HTML so that any formatting is preserved.
+      document.getElementById("recommendation").innerHTML = data.recommendation || "N/A";
+
+      document.getElementById("location").innerText =
+        "Location: " + (data.location || "N/A");
+      document.getElementById("weather").innerText =
+        "Weather: " + (data.weather || "N/A");
+
+      document.getElementById("status").innerText = "Status: Data updated.";
+      setTimeout(() => {
+        document.getElementById("status").innerText = "Status: Waiting for new data...";
+      }, 3000);
+    });
+  </script>
+
+  <footer>
+    <p>&copy; 2025 Farmers Friend Prototype</p>
+  </footer>
+</body>
+</html>
