@@ -1,2 +1,2 @@
 # farmerAssistant
-Gen Ai project
+Gen Ai project made for Project presentation in IIMB 
